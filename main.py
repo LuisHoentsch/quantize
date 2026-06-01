@@ -1,5 +1,8 @@
+import os
+
 from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.responses import Response
+from fastapi.responses import Response, FileResponse
+from fastapi.staticfiles import StaticFiles
 import cv2
 import numpy as np
 from stylizer import apply_stylization
@@ -47,6 +50,21 @@ async def stylize_image(
         return Response(content="Failed to encode image", status_code=500)
 
     return Response(content=encoded_image.tobytes(), media_type="image/jpeg")
+
+# --- 2. Mount the Vue Static Files ---
+# This tells FastAPI: "If a request starts with /assets, look in the dist/assets folder"
+app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+
+# This must go at the VERY BOTTOM of your code!
+@app.get("/{catchall:path}")
+async def serve_vue_app(catchall: str):
+    # Check if a specific file is requested (like a favicon)
+    file_path = f"frontend/dist/{catchall}"
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return FileResponse(file_path)
+
+    # Otherwise, return the main Vue index.html
+    return FileResponse("frontend/dist/index.html")
 
 if __name__ == "__main__":
     import uvicorn
