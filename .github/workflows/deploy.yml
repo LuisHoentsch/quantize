@@ -1,0 +1,42 @@
+name: Deploy Fullstack App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Code auschecken
+      uses: actions/checkout@v4
+
+    - name: Node.js einrichten
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Vue Frontend bauen
+      run: |
+        cd frontend
+        npm install
+        npm run build
+        # Verschiebe den fertigen dist-Ordner ins Hauptverzeichnis für FastAPI
+        mv dist ../dist
+
+    - name: Alles auf den VPS kopieren & Server neustarten
+      uses: easingthemes/ssh-deploy@main
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        REMOTE_HOST: ${{ secrets.SERVER_IP }}
+        REMOTE_USER: ${{ secrets.SERVER_USER }}
+        SOURCE: "./" # Kopiert den Python Code UND den neuen dist Ordner
+        EXCLUDE: "/frontend/, /.git/, /.github/" # Wir brauchen den rohen Vue-Code nicht auf dem Server
+        TARGET: "/var/www/quantize/"
+        SCRIPT_AFTER: |
+          cd /var/www/quantize
+          source venv/bin/activate
+          pip install -r requirements.txt
+          systemctl restart fastapi
