@@ -70,6 +70,16 @@ const applyFilter = async () => {
   }
 }
 
+const downloadResult = () => {
+  if (!afterImageUrl.value) return
+  const link = document.createElement('a')
+  link.href = afterImageUrl.value
+  link.download = 'quantize_result.jpg'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
 let applyTimeout: number | undefined
 
 const autoApplyTrigger = () => {
@@ -224,8 +234,16 @@ onUnmounted(() => {
           <div class="absolute top-4 left-4 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded border border-black/10 shadow-sm z-20">
             <span class="text-[10px] font-bold tracking-widest text-gray-900">BEFORE</span>
           </div>
-          <div v-if="hasResult" class="absolute top-4 right-4 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded border border-black/10 shadow-sm z-20">
-            <span class="text-[10px] font-bold tracking-widest text-gray-900">AFTER</span>
+          <div v-if="hasResult" class="absolute top-4 right-4 flex items-center gap-2 z-20">
+            <div class="bg-white/80 backdrop-blur-md px-3 py-1.5 rounded border border-black/10 shadow-sm flex items-center gap-2">
+              <span class="text-[10px] font-bold tracking-widest text-gray-900">AFTER</span>
+              <button @click.stop="downloadResult" class="text-gray-900 hover:text-blue-600 transition-colors" title="Download Image">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                  <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                </svg>
+              </button>
+            </div>
           </div>
 
           <!-- Slider Handle -->
