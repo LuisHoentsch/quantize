@@ -1,11 +1,16 @@
 import os
+import io
 
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import Response, FileResponse
 from fastapi.staticfiles import StaticFiles
 import cv2
 import numpy as np
+from PIL import Image
+import pillow_heif
 from stylizer import apply_stylization
+
+pillow_heif.register_heif_opener()
 
 app = FastAPI(title="Image Stylization API")
 
@@ -21,12 +26,41 @@ async def stylize_image(
     ksize: int = Form(7),
     max_dim: int = Form(1000)
 ):
+    # Check if the content type is supported
+    supported_mime_types = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/bmp",
+        "image/tiff",
+        "image/x-ms-bmp",
+        "image/heic",
+        "image/heif"
+    ]
+    if file.content_type not in supported_mime_types:
+        return Response(
+            content=f"Unsupported file format ({file.content_type}). Please provide a supported image.",
+            status_code=400
+        )
+
     # Read file contents into memory
     contents = await file.read()
 
-    # Convert directly to cv2 image
-    nparr = np.frombuffer(contents, np.uint8)
-    img_cv2 = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    # Convert to cv2 image
+    if file.content_type in ["image/heic", "image/heif"]:
+        try:
+            img_pil = Image.open(io.BytesIO(contents))
+            if img_pil.mode in ("RGBA", "P"):
+                img_pil = img_pil.convert("RGB")
+            elif img_pil.mode != "RGB":
+                img_pil = img_pil.convert("RGB")
+            # Convert PIL RGB to cv2 BGR
+            img_cv2 = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+        except Exception as e:
+            img_cv2 = None
+    else:
+        nparr = np.frombuffer(contents, np.uint8)
+        img_cv2 = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
     if img_cv2 is None:
         return Response(content="Invalid image data", status_code=400)

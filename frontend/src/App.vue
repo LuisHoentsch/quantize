@@ -56,7 +56,10 @@ const applyFilter = async () => {
       body: formData
     })
     
-    if (!response.ok) throw new Error("Error during Stylized API call")
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(errorText || "Error during Stylized API call")
+    }
 
     const blob = await response.blob()
     afterImageUrl.value = URL.createObjectURL(blob)
@@ -163,7 +166,7 @@ onUnmounted(() => {
             <div class="border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-900 transition-all rounded-xl p-6 text-center group">
               <span class="block text-xs font-semibold tracking-wider text-gray-500 mb-2">UPLOAD IMAGE</span>
             </div>
-            <input type="file" accept="image/*" class="hidden" @change="handleFileUpload" />
+            <input type="file" accept="image/*,.heic,.heif" class="hidden" @change="handleFileUpload" />
           </label>
         </div>
 
