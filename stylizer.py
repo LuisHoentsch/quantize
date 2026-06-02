@@ -82,6 +82,8 @@ def apply_stylization(
     #if debug_dir:
     #    os.makedirs(debug_dir, exist_ok=True)
 
+    #import os
+    #debug_dir = "./data/output"
     #def save_debug(img_to_save, filename):
     #    if debug_dir:
     #        cv2.imwrite(os.path.join(debug_dir, filename), img_to_save)
@@ -122,7 +124,7 @@ def apply_stylization(
             shade_centers = np.uint8(shade_centers)
             result_flat[mask] = shade_centers[shade_labels.flatten()]
         else:
-            result_flat[mask] = np.uint8(mask_pixels)
+            result_flat[mask] = np.uint8(base_centers[i])
 
         # Optional debug for individual steps
         #if debug_dir:
